@@ -21,16 +21,15 @@ st.write("Upload a CSV file containing two columns: `date` and `power_KW`.")
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 
  
- def create_sequences(values, window_size):
+def create_sequences(values, window_size):
      X = []
      y = []
-    for i in range(window_size, len(values)):
+for i in range(window_size, len(values)):
          X.append(values[i - window_size:i])
          y.append(values[i])
-     return np.array(X), np.array(y)
+return np.array(X), np.array(y)
 
-
- if uploaded_file is not None:
+if uploaded_file is not None:
      try:
          df = pd.read_csv(uploaded_file)
 
