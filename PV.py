@@ -34,7 +34,7 @@ if uploaded_file is not None:
          df = pd.read_csv(uploaded_file)
 
          # Check required columns
-        if "date" not in df.columns or "power_KW" not in df.columns:
+if "date" not in df.columns or "power_KW" not in df.columns:
             st.error("The CSV file must contain columns named 'date' and 'power_KW'.")
             st.stop()
 
@@ -49,7 +49,7 @@ if uploaded_file is not None:
         df["power_KW"] = pd.to_numeric(df["power_KW"], errors="coerce")
         df = df.dropna()
 
-        if len(df) < 50:
+if len(df) < 50:
             st.error("The dataset is too small for forecasting. Please upload a larger dataset.")
             st.stop()
 
@@ -78,7 +78,7 @@ if uploaded_file is not None:
 
         run_forecast = st.button("Run Forecast")
 
-        if run_forecast:
+if run_forecast:
             values = df["power_KW"].values
             X, y = create_sequences(values, window_size)
 
