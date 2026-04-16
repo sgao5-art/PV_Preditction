@@ -2,69 +2,86 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="PV Forecasting Demo", layout="wide")
+st.set_page_config(page_title="PV Forecasting App", layout="wide")
 
-st.title("PV Forecasting Demo")
+st.title("Photovoltaic Power Forecasting App")
 
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-
-
-def create_sequences(values, window_size):
-    X, y = [], []
-    for i in range(window_size, len(values)):
-        X.append(values[i - window_size:i])
-        y.append(values[i])
-    return np.array(X), np.array(y)
 
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 
+    # 检查列
     if "date" not in df.columns or "power_KW" not in df.columns:
-        st.error("The CSV file must contain columns: date and power_KW")
+        st.error("CSV must contain 'date' and 'power_KW'")
         st.stop()
 
+    # 数据处理
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["power_KW"] = pd.to_numeric(df["power_KW"], errors="coerce")
     df = df.dropna(subset=["date", "power_KW"])
-    df = df.sort_values("date").reset_index(drop=True)
+    df = df.sort_values("date")
 
-    st.subheader("Original PV Power Curve")
-    original_chart = df.set_index("date")[["power_KW"]]
-    st.line_chart(original_chart)
+    # 按天汇总（关键）
+    df["day"] = df["date"].dt.date
+    daily_df = df.groupby("day")["power_KW"].sum().reset_index()
+    daily_df["day"] = pd.to_datetime(daily_df["day"])
 
-    st.subheader("Forecasting")
-    window_size = st.slider("Window Size", min_value=3, max_value=48, value=24)
-    run_forecast = st.button("Run Forecast")
+    # 提取年份
+    daily_df["year"] = daily_df["day"].dt.year
 
-    if run_forecast:
-        values = df["power_KW"].values
-        X, y = create_sequences(values, window_size)
+    # =========================
+    # 1. 年份选择 + 可视化
+    # =========================
+    st.header("1. Historical Data Visualization")
 
-        if len(X) == 0:
-            st.error("Not enough data for forecasting.")
-            st.stop()
+    year_option = st.selectbox(
+        "Select Year",
+        options=["All", 2017, 2018, 2019]
+    )
 
-        split_index = int(len(X) * 0.8)
+    if year_option == "All":
+        plot_df = daily_df
+    else:
+        plot_df = daily_df[daily_df["year"] == year_option]
 
-        X_train = X[:split_index]
-        X_test = X[split_index:]
-        y_train = y[:split_index]
-        y_test = y[split_index:]
+    st.line_chart(plot_df.set_index("day")["power_KW"])
 
-        X_train_aug = np.column_stack([X_train, np.ones(len(X_train))])
-        coef, _, _, _ = np.linalg.lstsq(X_train_aug, y_train, rcond=None)
+    # =========================
+    # 2. 预测未来某一天
+    # =========================
+    st.header("2. Predict Future Date")
 
-        X_test_aug = np.column_stack([X_test, np.ones(len(X_test))])
-        y_pred = X_test_aug @ coef
+    input_date = st.date_input("Select a future date")
 
-        test_dates = df["date"].iloc[window_size + split_index:].reset_index(drop=True)
+    if st.button("Predict"):
+        # 特征：用简单时间特征
+        daily_df["day_of_year"] = daily_df["day"].dt.dayofyear
+        daily_df["month"] = daily_df["day"].dt.month
 
-        result_df = pd.DataFrame({
-            "date": test_dates,
-            "Actual": y_test,
-            "Predicted": y_pred
-        }).set_index("date")
+        X = daily_df[["day_of_year", "month"]].values
+        y = daily_df["power_KW"].values
 
-        st.subheader("Actual vs Predicted")
-        st.line_chart(result_df)
+        # 简单线性回归（numpy实现）
+        X_aug = np.column_stack([X, np.ones(len(X))])
+        coef, _, _, _ = np.linalg.lstsq(X_aug, y, rcond=None)
+
+        # 预测输入日期
+        input_date = pd.to_datetime(input_date)
+        input_features = np.array([[input_date.dayofyear, input_date.month]])
+        input_aug = np.column_stack([input_features, [1]])
+
+        prediction = input_aug @ coef
+
+        st.subheader("Prediction Result")
+        st.write(
+            f"Predicted PV generation on {input_date.date()} : {prediction[0]:.2f} kW"
+        )
+
+        st.write(
+            "This prediction is based on historical seasonal patterns learned from 2017–2019 data."
+        )
+
+else:
+    st.info("Please upload a CSV file.")
