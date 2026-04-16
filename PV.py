@@ -1,5 +1,5 @@
-Python 3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)] on win32
-Enter "help" below or click "Help" above for more information.
+
+
 >>> import streamlit as st
 ... import pandas as pd
 ... import numpy as np
@@ -135,3 +135,4 @@ Enter "help" below or click "Help" above for more information.
         st.error(f"An error occurred while processing the file: {e}")
 
 else:
+        st.info("Please upload a CSV file to start.")
