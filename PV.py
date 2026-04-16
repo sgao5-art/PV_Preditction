@@ -1,43 +1,43 @@
 
 
-... import streamlit as st
-... import pandas as pd
-... import numpy as np
-... import matplotlib.pyplot as plt
-... 
-... from sklearn.linear_model import LinearRegression
-... 
-... st.set_page_config(page_title="PV Power Forecasting Demo", layout="wide")
-... 
-... st.title("Photovoltaic Power Forecasting Demo")
-... st.write(
-...     "This demo uploads PV generation data, visualizes the original power curve, "
-...     "performs a simple forecast, and compares actual values with predicted values."
-... )
-... 
-... st.header("1. Upload Data")
-... st.write("Upload a CSV file containing two columns: `date` and `power_KW`.")
-... 
-... uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
-... 
-... 
-... def create_sequences(values, window_size):
-...     X = []
-...     y = []
-...     for i in range(window_size, len(values)):
-...         X.append(values[i - window_size:i])
-...         y.append(values[i])
-...     return np.array(X), np.array(y)
-... 
-... 
-... if uploaded_file is not None:
-...     try:
-...         df = pd.read_csv(uploaded_file)
-... 
-...         # Check required columns
-...         if "date" not in df.columns or "power_KW" not in df.columns:
-...             st.error("The CSV file must contain columns named 'date' and 'power_KW'.")
-...             st.stop()
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+ 
+from sklearn.linear_model import LinearRegression
+ 
+st.set_page_config(page_title="PV Power Forecasting Demo", layout="wide")
+ 
+st.title("Photovoltaic Power Forecasting Demo")
+st.write(
+     "This demo uploads PV generation data, visualizes the original power curve, "
+    "performs a simple forecast, and compares actual values with predicted values."
+ )
+ 
+ st.header("1. Upload Data")
+ st.write("Upload a CSV file containing two columns: `date` and `power_KW`.")
+ 
+ uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+
+ 
+ def create_sequences(values, window_size):
+     X = []
+     y = []
+    for i in range(window_size, len(values)):
+         X.append(values[i - window_size:i])
+         y.append(values[i])
+     return np.array(X), np.array(y)
+
+
+ if uploaded_file is not None:
+     try:
+         df = pd.read_csv(uploaded_file)
+
+         # Check required columns
+        if "date" not in df.columns or "power_KW" not in df.columns:
+            st.error("The CSV file must contain columns named 'date' and 'power_KW'.")
+            st.stop()
 
         # Convert and sort
         df["date"] = pd.to_datetime(df["date"])
