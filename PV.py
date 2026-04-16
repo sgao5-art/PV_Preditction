@@ -15,10 +15,10 @@ st.write(
     "performs a simple forecast, and compares actual values with predicted values."
  )
  
- st.header("1. Upload Data")
- st.write("Upload a CSV file containing two columns: `date` and `power_KW`.")
+st.header("1. Upload Data")
+st.write("Upload a CSV file containing two columns: `date` and `power_KW`.")
  
- uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 
  
  def create_sequences(values, window_size):
